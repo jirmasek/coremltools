@@ -7433,7 +7433,13 @@ class TestScaledDotProductAttentionSlicedQ:
 
         pipeline_3 = ct.PassPipeline.DEFAULT
         pipeline_3.append_pass("common::scaled_dot_product_attention_sliced_q")
-        pipeline_3.set_options("common::scaled_dot_product_attention_sliced_q", {"seq_length_divider": 32})
+        pipeline_3.set_options("common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256})
+
+        pipeline_4 = ct.PassPipeline.DEFAULT
+        pipeline_4.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_4.set_options(
+            "common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256, "seq_length_divider": 32}
+        )
 
         model = TestScaledDotProductAttentionSlicedQ.AttentionPyTorch()
         model_inputs, coreml_model_inputs = TestScaledDotProductAttentionSlicedQ._get_trace_coreml_inputs(example_inputs)
@@ -7448,7 +7454,7 @@ class TestScaledDotProductAttentionSlicedQ:
                 skip_model_load=False,
                 pass_pipeline=pipeline,
             )
-            for pipeline in [pipeline_1, pipeline_2, pipeline_3]
+            for pipeline in [pipeline_1, pipeline_2, pipeline_3, pipeline_4]
         ]
 
         model_specs = [coreml_model.get_spec() for coreml_model in coreml_models]
@@ -7465,8 +7471,9 @@ class TestScaledDotProductAttentionSlicedQ:
         ops_counts = [len(prog.functions["main"].operations) for prog in progs]
 
         assert ops_counts[0] == 1 or ops_counts[0] == 3  # (attn_mask might be cast to bool from input fp16 dtype)
-        assert ops_counts[1] >= 26 * 16
-        assert ops_counts[2] >= 26 * 32
+        assert ops_counts[1] == 1 or ops_counts[1] == 3  # the Q seq length is less than the default min seq length
+        assert ops_counts[2] >= 26 * 16
+        assert ops_counts[3] >= 26 * 32
 
         predict_inputs = copy.deepcopy(example_inputs)
         if "attn_mask" in predict_inputs:
