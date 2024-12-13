@@ -16,14 +16,13 @@ from coremltools.converters.mil.mil import types
 from coremltools import _logger as logger
 
 
-@register_pass(namespace="mil_backend")
+@register_pass(namespace="common")
 class scaled_dot_product_attention_sliced_q(AbstractGraphPass):
     """
     Replace the ios18.scaled_dot_product_attention operation with a memory efficient
     implementation of attention calculation based on slicing Q.
 
     Graph pass options:
-
       - seq_length_divider: int
         Defines the size of the chunks of Q being processed in SDPA (chunk_size = seq_length / seq_length_divider)
     """

@@ -7429,11 +7429,11 @@ class TestScaledDotProductAttentionSlicedQ:
         pipeline_1 = ct.PassPipeline.DEFAULT
 
         pipeline_2 = ct.PassPipeline.DEFAULT
-        pipeline_2.append_pass("mil_backend::scaled_dot_product_attention_sliced_q")
+        pipeline_2.append_pass("common::scaled_dot_product_attention_sliced_q")
 
         pipeline_3 = ct.PassPipeline.DEFAULT
-        pipeline_3.append_pass("mil_backend::scaled_dot_product_attention_sliced_q")
-        pipeline_3.set_options("mil_backend::scaled_dot_product_attention_sliced_q", {"seq_length_divider": 32})
+        pipeline_3.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_3.set_options("common::scaled_dot_product_attention_sliced_q", {"seq_length_divider": 32})
 
         model = TestScaledDotProductAttentionSlicedQ.AttentionPyTorch()
         model_inputs, coreml_model_inputs = TestScaledDotProductAttentionSlicedQ._get_trace_coreml_inputs(example_inputs)
