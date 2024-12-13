@@ -20,27 +20,45 @@ from coremltools import _logger as logger
 class scaled_dot_product_attention_sliced_q(AbstractGraphPass):
     """
     Replace the ios18.scaled_dot_product_attention operation with a memory efficient
-    implementation of attention calculation based on slicing Q.
+    implementation of attention calculation based on slicing Q. The benefits are clearly
+    visible for higher Q sequence lengths, though.
 
     Graph pass options:
+      - min_seq_length: int
+        Only operations working with Q of sequence length greater or equal to this value will be transformed.
       - seq_length_divider: int
         Defines the size of the chunks of Q being processed in SDPA (chunk_size = seq_length / seq_length_divider)
     """
 
+    _DEFAULT_MIN_SEQ_LENGTH: ClassVar[int] = 1280
     _DEFAULT_SEQ_LENGTH_DIVIDER: ClassVar[int] = 16
 
+    _min_seq_length: int
     _seq_length_divider: int
 
     def __init__(self):
         super().__init__()
+        self._min_seq_length = self._DEFAULT_MIN_SEQ_LENGTH
         self._seq_length_divider = self._DEFAULT_SEQ_LENGTH_DIVIDER
 
     @property
-    def seq_length_divider(self):
+    def min_seq_length(self) -> int:
+        return self._min_seq_length
+
+    @min_seq_length.setter
+    def min_seq_length(self, length: int) -> None:
+        if not isinstance(length, int):
+            raise ValueError("pass option min_seq_length must be an int")
+        if length < 0:
+            raise ValueError("pass option min_seq_length must be >= 0")
+        self._min_seq_length = length
+
+    @property
+    def seq_length_divider(self) -> int:
         return self._seq_length_divider
 
     @seq_length_divider.setter
-    def seq_length_divider(self, divider: int):
+    def seq_length_divider(self, divider: int) -> None:
         if not isinstance(divider, int):
             raise ValueError("pass option seq_length_divider must be an int")
         if divider < 1:
@@ -88,6 +106,12 @@ class scaled_dot_product_attention_sliced_q(AbstractGraphPass):
 
         q_size = len(q.shape)
         q_seq_length = q.shape[-2]
+        if q_seq_length < self._min_seq_length:
+            logger.debug(
+                f"skipping SDPA op, Q seq_length is {q_seq_length} (minimum seq length needed: {self._min_seq_length}"
+            )
+            return
+
         dims = q.shape[-1]
         normalize_factor = float(dims) ** -0.5
 
