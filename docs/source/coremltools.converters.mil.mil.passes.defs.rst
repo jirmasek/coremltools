@@ -152,6 +152,6 @@ symbol_transform
 scaled_dot_product_attention
 ---------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.backend.mil.passes.scaled_dot_product_attention_sliced_q
+.. automodule:: coremltools.converters.mil.mil.passes.defs.scaled_dot_product_attention_sliced_q
 
     .. autoclass:: scaled_dot_product_attention_sliced_q
