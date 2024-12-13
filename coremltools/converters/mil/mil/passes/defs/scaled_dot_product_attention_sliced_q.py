@@ -42,9 +42,9 @@ class scaled_dot_product_attention_sliced_q(AbstractGraphPass):
     @seq_length_divider.setter
     def seq_length_divider(self, divider: int):
         if not isinstance(divider, int):
-            raise ValueError(f"pass option seq_length_divider must be an int")
+            raise ValueError("pass option seq_length_divider must be an int")
         if divider < 1:
-            raise ValueError(f"pass option seq_length_divider must be >= 1")
+            raise ValueError("pass option seq_length_divider must be >= 1")
         self._seq_length_divider = divider
 
     def apply(self, prog):
